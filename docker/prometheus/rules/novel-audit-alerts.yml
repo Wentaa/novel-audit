@@ -1,0 +1,135 @@
+groups:
+  - name: novel-audit-system
+    rules:
+      # API Health Alerts
+      - alert: APIDown
+        expr: up{job="novel-audit-api"} == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Novel Audit API is down"
+          description: "The Novel Audit API has been down for more than 1 minute."
+
+      - alert: HighResponseTime
+        expr: histogram_quantile(0.95, rate(http_request_duration_seconds_bucket{job="novel-audit-api"}[5m])) > 0.5
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High API response time"
+          description: "95th percentile response time is above 500ms for 5 minutes."
+
+      - alert: HighErrorRate
+        expr: rate(http_requests_total{job="novel-audit-api", status=~"5.."}[5m]) / rate(http_requests_total{job="novel-audit-api"}[5m]) > 0.1
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "High error rate"
+          description: "Error rate is above 10% for 5 minutes."
+
+      # Resource Usage Alerts
+      - alert: HighCPUUsage
+        expr: (100 - (avg by (instance) (rate(node_cpu_seconds_total{mode="idle"}[2m])) * 100)) > 80
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High CPU usage"
+          description: "CPU usage is above 80% for 5 minutes."
+
+      - alert: HighMemoryUsage
+        expr: (node_memory_MemTotal_bytes - node_memory_MemAvailable_bytes) / node_memory_MemTotal_bytes * 100 > 85
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High memory usage"
+          description: "Memory usage is above 85% for 5 minutes."
+
+      - alert: DiskSpaceLow
+        expr: (node_filesystem_avail_bytes{fstype!="tmpfs"} / node_filesystem_size_bytes{fstype!="tmpfs"}) * 100 < 10
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Low disk space"
+          description: "Disk space is below 10%."
+
+      # Application-Specific Alerts
+      - alert: HighAuditProcessingTime
+        expr: histogram_quantile(0.95, rate(audit_processing_duration_seconds_bucket[5m])) > 30
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High audit processing time"
+          description: "95th percentile audit processing time is above 30 seconds."
+
+      - alert: TooManyPendingHumanReviews
+        expr: pending_human_reviews_total > 1000
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Too many pending human reviews"
+          description: "There are more than 1000 pending human reviews."
+
+      - alert: RAGDatabaseConnectionFailed
+        expr: rag_database_connection_status == 0
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "RAG database connection failed"
+          description: "Connection to RAG vector database (ChromaDB) has failed."
+
+      - alert: LowConfidenceDecisionRate
+        expr: rate(audit_decisions_total{confidence="low"}[10m]) / rate(audit_decisions_total[10m]) > 0.5
+        for: 15m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High rate of low confidence decisions"
+          description: "More than 50% of decisions have low confidence for 15 minutes."
+
+  - name: infrastructure
+    rules:
+      # Database Alerts
+      - alert: RedisDown
+        expr: up{job="redis"} == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Redis is down"
+          description: "Redis cache service is not responding."
+
+      - alert: ChromaDBDown
+        expr: up{job="chromadb"} == 0
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "ChromaDB is down"
+          description: "ChromaDB vector database is not responding."
+
+      # Network Alerts
+      - alert: NginxDown
+        expr: up{job="nginx"} == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Nginx is down"
+          description: "Nginx reverse proxy is not responding."
+
+      - alert: HighConnectionCount
+        expr: nginx_connections_active > 1000
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High connection count"
+          description: "Nginx active connections are above 1000."

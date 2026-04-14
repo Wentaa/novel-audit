@@ -1,0 +1,44 @@
+# Core framework dependencies
+fastapi==0.104.1
+uvicorn==0.24.0
+langchain==0.1.0
+langgraph==0.0.26
+langsmith==0.0.69
+
+# AI service dependencies
+openai==1.6.1
+tiktoken==0.5.2
+
+# Multi-model AI services
+anthropic==0.34.0
+aiohttp==3.9.1
+
+# Vector database
+chromadb==0.4.18
+
+# Data processing
+pandas==2.1.4
+numpy==1.25.2
+
+# Database
+sqlalchemy==2.0.23
+alembic==1.13.1
+
+# Configuration management
+pydantic==2.5.2
+pydantic-settings==2.1.0
+python-dotenv==1.0.0
+
+# File processing
+pypdf==3.17.4
+python-docx==1.1.0
+
+# Testing
+pytest==7.4.3
+pytest-asyncio==0.21.1
+httpx==0.25.2
+
+# Development tools
+black==23.11.0
+isort==5.12.0
+flake8==6.1.0

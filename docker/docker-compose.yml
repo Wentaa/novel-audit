@@ -1,0 +1,47 @@
+version: '3.8'
+
+services:
+  novel-audit-api:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    ports:
+      - "8000:8000"
+    environment:
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - ENVIRONMENT=development
+      - LOG_LEVEL=INFO
+    volumes:
+      - ../src:/app/src
+      - ../data:/app/data
+      - ../storage:/app/storage
+      - ../logs:/app/logs
+    networks:
+      - novel-audit-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  chromadb:
+    image: chromadb/chroma:latest
+    ports:
+      - "8001:8000"
+    environment:
+      - CHROMA_SERVER_AUTH_PROVIDER=chromadb.auth.basic.BasicAuthServerProvider
+      - CHROMA_SERVER_AUTH_CREDENTIALS_FILE=/chroma/server.htpasswd
+    volumes:
+      - chromadb_data:/chroma/chroma
+      - ./chroma:/chroma
+    networks:
+      - novel-audit-network
+    restart: unless-stopped
+
+volumes:
+  chromadb_data:
+
+networks:
+  novel-audit-network:
+    driver: bridge
